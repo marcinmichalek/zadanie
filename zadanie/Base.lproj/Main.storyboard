@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="5056" systemVersion="12F37" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="wl0-w4-M0a">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="3733"/>
+    </dependencies>
+    <scenes>
+        <!--Navigation Controller-->
+        <scene sceneID="eEv-8G-LqB">
+            <objects>
+                <navigationController definesPresentationContext="YES" id="wl0-w4-M0a" sceneMemberID="viewController">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="6gf-ek-3ty">
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <connections>
+                        <segue destination="XjR-Ke-Y2n" kind="relationship" relationship="rootViewController" id="vwm-pr-LYy"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="icW-Cc-MhJ" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="131" y="162"/>
+        </scene>
+        <!--Map View Controller - Mapa-->
+        <scene sceneID="zHR-Mp-kva">
+            <objects>
+                <viewController id="XjR-Ke-Y2n" customClass="MapViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="Dhk-86-i5w"/>
+                        <viewControllerLayoutGuide type="bottom" id="uPk-Mo-kxL"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="OVa-AK-cUk">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" showsUserLocation="YES" translatesAutoresizingMaskIntoConstraints="NO" id="xiL-NU-PiL">
+                                <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <connections>
+                                    <outlet property="delegate" destination="XjR-Ke-Y2n" id="SJ2-XN-fXS"/>
+                                </connections>
+                            </mapView>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstAttribute="trailing" secondItem="xiL-NU-PiL" secondAttribute="trailing" id="7hE-Wo-JPY"/>
+                            <constraint firstItem="xiL-NU-PiL" firstAttribute="top" secondItem="OVa-AK-cUk" secondAttribute="top" id="DMj-Sf-Rsv"/>
+                            <constraint firstItem="xiL-NU-PiL" firstAttribute="leading" secondItem="OVa-AK-cUk" secondAttribute="leading" id="SJ9-EW-5s6"/>
+                            <constraint firstItem="uPk-Mo-kxL" firstAttribute="top" secondItem="xiL-NU-PiL" secondAttribute="bottom" id="rBh-z8-6Qb"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" title="Mapa" id="StL-Xe-J0z">
+                        <barButtonItem key="rightBarButtonItem" systemItem="refresh" id="LUu-JC-cLg">
+                            <connections>
+                                <action selector="reloadData:" destination="XjR-Ke-Y2n" id="lac-gG-nAY"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
+                    <connections>
+                        <outlet property="mapView" destination="xiL-NU-PiL" id="gqP-UD-kQi"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="yId-eY-jA7" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="668" y="162"/>
+        </scene>
+    </scenes>
+    <simulatedMetricsContainer key="defaultSimulatedMetrics">
+        <simulatedStatusBarMetrics key="statusBar"/>
+        <simulatedOrientationMetrics key="orientation"/>
+        <simulatedScreenMetrics key="destination" type="retina4"/>
+    </simulatedMetricsContainer>
+</document>
