@@ -159,8 +159,6 @@
 {
     CLLocation *newLocation = [locations lastObject];
     
-    [self updateMapRegion];
-    
     [self calcDistanceBetweenAnnotationAndUserLocaton:newLocation];
 }
 
