@@ -8,14 +8,16 @@
 
 #import "MapViewController.h"
 #import "MyAnnotation.h"
-
-@interface MapViewController ()
-
-@end
+#import <RestKit/RestKit.h>
 
 #define JSON_URL "https://dl.dropboxusercontent.com/u/6556265/test.json"
 #define USER_PIN_TAG [NSNumber numberWithInt:1]
 #define LOCATION_PIN_TAG [NSNumber numberWithInt:2]
+
+
+@interface MapViewController ()
+
+@end
 
 @implementation MapViewController
 
@@ -82,34 +84,36 @@
 {
     self.title = NSLocalizedString(@"LOADING", nil);
     
-    NSURL *url = [NSURL URLWithString:@JSON_URL];
     
-    NSURLRequest *request = [NSURLRequest requestWithURL:url];
-    
-    [NSURLConnection sendAsynchronousRequest:request
-                                       queue:[NSOperationQueue mainQueue]
-                           completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-       
-        if(!connectionError && data.length > 0){
-            // convert to dict
-            NSDictionary *d = [self convertDataToDict:data];
-
-            if(d){
-                // remove old pin
-                [self removeAnnotationFromMapWithTag:LOCATION_PIN_TAG];
-                
-                [self.mapView removeOverlays:self.mapView.overlays];
-                
-                // put pin
-                [self putPinOnMap:d withTag:LOCATION_PIN_TAG];
-            }
-        }
-        else{
-            NSLog(@"%@: %@", NSLocalizedString(@"INTERNET_CONNECTION_PROBLEM_LOG", nil), connectionError.localizedDescription);
+    // get json from server
+    AFHTTPClient *httpClient = [[AFHTTPClient alloc] initWithBaseURL:[NSURL URLWithString:@"https://dl.dropboxusercontent.com/"]];
+    NSMutableURLRequest *request = [httpClient requestWithMethod:@"GET"
+                                                            path:@JSON_URL
+                                                      parameters:nil];
+    AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request];
+    [httpClient registerHTTPOperationClass:[AFHTTPRequestOperation class]];
+    [operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
+        NSLog(@"Response: %@", [[NSString alloc] initWithData:responseObject encoding:NSUTF8StringEncoding]);
+        
+        // convert to dict
+        NSDictionary *d = [self convertDataToDict:responseObject];
+        
+        if(d){
+            // remove old pin
+            [self removeAnnotationFromMapWithTag:LOCATION_PIN_TAG];
             
-            self.title = NSLocalizedString(@"OFFLINE", nil);
+            [self.mapView removeOverlays:self.mapView.overlays];
+            
+            // put pin
+            [self putPinOnMap:d withTag:LOCATION_PIN_TAG];
         }
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        NSLog(@"%@: %@", NSLocalizedString(@"INTERNET_CONNECTION_PROBLEM_LOG", nil), error.localizedDescription);
+        
+        self.title = NSLocalizedString(@"OFFLINE", nil);
     }];
+    
+    [operation start];
 }
 
 - (CLLocationCoordinate2D)getCoordinateFromDict:(NSDictionary *)dict
@@ -222,7 +226,7 @@
     dist /= 1000.0f;
     
     // set viewcontroller title
-    self.title = [NSString stringWithFormat:@"%@: %.2f km", NSLocalizedString(@"DISTANCE_BETWEEN_POINTS", nil), dist];
+    self.title = [NSString stringWithFormat:@"%@: %.2f km", NSLocalizedString(@"DISTANCE", nil), dist];
 }
 
 
@@ -388,32 +392,31 @@
         NSURL *imgURL = a.url;
         
         if(imgURL){
-            // init & send request
-            NSURLRequest *request = [NSURLRequest requestWithURL:imgURL];
             
+            // get image and add it to pin
             __block MKAnnotationView *aView = view;
-            [NSURLConnection sendAsynchronousRequest:request
-                                               queue:[NSOperationQueue mainQueue]
-                                   completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-                
-                if(!connectionError && data.length > 0){
-                    // get img from data
-                    UIImage *img = [UIImage imageWithData:data];
+            
+            NSURLRequest *request = [NSURLRequest requestWithURL:imgURL];
+            AFImageRequestOperation *operation;
+            operation = [AFImageRequestOperation imageRequestOperationWithRequest:request
+                                                             imageProcessingBlock:nil
+                                                                          success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+                if(image){
+                    // init img view
+                    UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 32, 32)];
+                    imageView.image = image;
                     
-                    if(img){
-                        // init img view
-                        UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 32, 32)];
-                        imageView.image = img;
-                        
-                        // set img view as left accessory view
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            aView.leftCalloutAccessoryView = imageView;
-                        });
-                    }
+                    // set img view as left accessory view
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        aView.leftCalloutAccessoryView = imageView;
+                    });
                 }
-                else
-                    NSLog(@"%@: %@", NSLocalizedString(@"INTERNET_CONNECTION_PROBLEM_LOG", nil), connectionError.localizedDescription);
+                
+            } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
+                NSLog(@"%@: %@", NSLocalizedString(@"INTERNET_CONNECTION_PROBLEM_LOG", nil), error.localizedDescription);
             }];
+            
+            [operation start];
         }
     }
 }
