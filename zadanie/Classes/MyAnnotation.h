@@ -11,11 +11,10 @@
 
 @interface MyAnnotation : NSObject <MKAnnotation>
 
-@property (strong, nonatomic) NSURL *url;
+@property (strong, nonatomic, readonly) NSURL *url;
+@property (strong, nonatomic, readonly) NSNumber *tag;
 
-- (id)initWithName:(NSString*)name coordinate:(CLLocationCoordinate2D)coordinate imgURL:(NSURL *)url;
-
-- (NSURL *)imageURL;
+- (id)initWithName:(NSString*)name coordinate:(CLLocationCoordinate2D)coordinate imgURL:(NSURL *)url andTag:(NSNumber*)tag;
 
 @end
 

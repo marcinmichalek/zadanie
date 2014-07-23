@@ -1,0 +1,20 @@
+/* 
+  Localizable.strings
+  zadanie
+
+  Created by Maciej Rzeznik on 23.07.2014.
+  Copyright (c) 2014 mm. All rights reserved.
+*/
+
+"LOADING" = "loading...";
+"OFFLINE" = "offline :(";
+"GPS_PROBLEM" = "GPS problem";
+"DISTANCE_BETWEEN_POINTS" = "distance to the point";
+"DISTANCE" = "distance";
+"USER_LOCATION" = "current location";
+
+"LOCATION_SERVICES_AUTH_ALERT" = "You must enable location services for you mobile and for \"zadanie\" application in Settings> Privacy> Location Services.";
+
+
+"INTERNET_CONNECTION_PROBLEM_LOG" = "Problem with internet connection";
+"JSON_DECODE_PROBLEM_LOG" = "Problem with JSON decoding";

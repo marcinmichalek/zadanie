@@ -14,18 +14,34 @@
 @end
 
 #define JSON_URL "https://dl.dropboxusercontent.com/u/6556265/test.json"
+#define USER_PIN_TAG [NSNumber numberWithInt:1]
+#define LOCATION_PIN_TAG [NSNumber numberWithInt:2]
 
 @implementation MapViewController
 
 #pragma mark -
 #pragma mark ViewController lifecycle
 
-- (void)viewWillAppear:(BOOL)animated
+- (void)viewDidLoad
 {
-    [super viewWillAppear:animated];
+    [super viewDidLoad];
     
-    if(locMgr)
+    // init location manager
+    if(!locMgr){
+        locMgr = [CLLocationManager new];
+        locMgr.desiredAccuracy = kCLLocationAccuracyHundredMeters;
+        locMgr.pausesLocationUpdatesAutomatically = YES;
+        [locMgr setDelegate:self];
         [locMgr startUpdatingLocation];
+    }
+//    else{
+//        [self checkLocationServices];
+//    }
+}
+
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
     
     // try load pin
     [self loadJSONData];
@@ -38,6 +54,7 @@
     
     [super viewWillDisappear:animated];
 }
+
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
 {
     if(locMgr)
@@ -51,6 +68,8 @@
 
 - (IBAction)reloadData:(UIBarButtonItem *)sender
 {
+    gpsFix = NO;
+    
     [self loadJSONData];
 }
 
@@ -61,7 +80,7 @@
 
 - (void)loadJSONData
 {
-    self.title = @"wczytywanie...";
+    self.title = NSLocalizedString(@"LOADING", nil);
     
     NSURL *url = [NSURL URLWithString:@JSON_URL];
     
@@ -76,29 +95,17 @@
             NSDictionary *d = [self convertDataToDict:data];
 
             if(d){
-                // clear map
-                [self.mapView removeAnnotations:self.mapView.annotations];
+                // remove old pin
+                [self removeAnnotationFromMapWithTag:LOCATION_PIN_TAG];
                 
                 // put pin
-                [self putPinOnMap:d];
-                
-                // init location manager
-                if(!locMgr){
-                    locMgr = [CLLocationManager new];
-                    locMgr.desiredAccuracy = kCLLocationAccuracyHundredMeters;
-                    locMgr.pausesLocationUpdatesAutomatically = YES;
-                    [locMgr setDelegate:self];
-                    [locMgr startUpdatingLocation];
-                }
-                else{
-                    [self checkLocationServices];
-                }
+                [self putPinOnMap:d withTag:LOCATION_PIN_TAG];
             }
         }
         else{
-            NSLog(@"Problem with internet connection: %@", connectionError.localizedDescription);
+            NSLog(@"%@: %@", NSLocalizedString(@"INTERNET_CONNECTION_PROBLEM_LOG", nil), connectionError.localizedDescription);
             
-            self.title = @"offline :(";
+            self.title = NSLocalizedString(@"OFFLINE", nil);
         }
     }];
 }
@@ -132,7 +139,7 @@
                                                  error:&error];
         
         if(error)
-            NSLog(@"Problem with json: %@", error.localizedDescription);
+            NSLog(@"%@: %@", NSLocalizedString(@"JSON_DECODE_PROBLEM_LOG", nil) ,error.localizedDescription);
     }
     
     return dict;
@@ -145,9 +152,23 @@
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations
 {
-    CLLocation *newLocation = [locations lastObject];
-    
-    [self calcDistanceBetweenAnnotationAndUserLocaton:newLocation];
+    if(!gpsFix){
+        gpsFix = YES;
+        
+        // remove old user pin
+        [self removeAnnotationFromMapWithTag:USER_PIN_TAG];
+        
+        CLLocation *newLocation = [locations lastObject];
+        lastUserLocation = newLocation;
+        
+        // put pin with user location
+        NSMutableDictionary *userLocationDict = [[NSMutableDictionary alloc] init];
+        NSDictionary *locationD = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithDouble:newLocation.coordinate.latitude], @"latitude", [NSNumber numberWithDouble:newLocation.coordinate.longitude], @"longitude", nil];
+        [userLocationDict setObject:locationD forKey:@"location"];
+        [userLocationDict setValue:NSLocalizedString(@"USER_LOCATION", nil) forKey:@"text"];
+        
+        [self putPinOnMap:userLocationDict withTag:USER_PIN_TAG];
+    }
 }
 
 - (void)checkLocationServices
@@ -158,8 +179,9 @@
     
     if(!locationServEnabled || gpsAuthStatus == kCLAuthorizationStatusDenied){
         
+        NSString *msg = NSLocalizedString(@"LOCATION_SERVICES_AUTH_ALERT", nil);
         // show alert
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:@"Aplikacja nie posiada uprawnień lokalizacyjnych, lub masz wyłączony moduł GPS (Ustawienia / Prywatność / Usługi lokalizacji)" delegate:nil cancelButtonTitle:@"Ok" otherButtonTitles:nil];
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:msg delegate:nil cancelButtonTitle:@"Ok" otherButtonTitles:nil];
         
         [alert show];
     }
@@ -175,13 +197,13 @@
     // get map annotation coord
     MyAnnotation *annotationOnMap = nil;
     
-    for (id a in self.mapView.annotations) {
-        if([a isKindOfClass:[MyAnnotation class]])
+    for (MyAnnotation *a in self.mapView.annotations) {
+        if(a.tag == LOCATION_PIN_TAG)
             annotationOnMap = a;
     }
     
     if(!annotationOnMap || !userLocation){
-        self.title = @"problem z GPS";
+        self.title = NSLocalizedString(@"GPS_PROBLEM", nil);
         return;
     }
     
@@ -195,7 +217,7 @@
     dist /= 1000.0f;
     
     // set viewcontroller title
-    self.title = [NSString stringWithFormat:@"odległość do punktu: %.2f km", dist];
+    self.title = [NSString stringWithFormat:@"%@: %.2f km", NSLocalizedString(@"DISTANCE_BETWEEN_POINTS", nil), dist];
 }
 
 
@@ -203,25 +225,73 @@
 #pragma mark -
 #pragma mark Actions On map
 
-- (void)putPinOnMap:(NSDictionary *)dict
+- (void)putPinOnMap:(NSDictionary *)dict withTag:(NSNumber*)tag
 {
     // get coordinate
     CLLocationCoordinate2D c = [self getCoordinateFromDict:dict];
     
     NSString *name = [dict valueForKey:@"text"];
-    NSURL *url = [NSURL URLWithString:[dict valueForKey:@"image"]];
+    NSString *imgURL = [dict valueForKey:@"image"];
+    
+    NSURL *url = nil;
+    if(imgURL.length > 0)
+        url = [NSURL URLWithString:imgURL];
     
     // add annotation
     MyAnnotation *annotation = [[MyAnnotation alloc] initWithName:name
                                                        coordinate:c
-                                                           imgURL:url];
+                                                           imgURL:url
+                                                           andTag:tag];
     [self.mapView addAnnotation:annotation];
     
     // update map region
     [self updateMapRegion];
     
     // dont wait for locMgr now!
-    [self calcDistanceBetweenAnnotationAndUserLocaton:self.mapView.userLocation.location];
+    [self calcDistanceBetweenAnnotationAndUserLocaton:lastUserLocation];
+    
+    
+    // draw line between points
+    CLLocation *pinLocation = nil;
+    NSLog(@"annotations count = %i", self.mapView.annotations.count);
+    if(self.mapView.annotations.count == 2){
+        
+        for (MyAnnotation *a in self.mapView.annotations) {
+            if(a.tag == LOCATION_PIN_TAG){
+                pinLocation = [[CLLocation alloc] initWithLatitude:a.coordinate.latitude longitude:a.coordinate.longitude];
+                break;
+            }
+        }
+    
+        if(pinLocation)
+            [self drawLineFromPoint:lastUserLocation toPoint:pinLocation withTitle:NSLocalizedString(@"DISTANCE", nil)];
+    }
+}
+
+- (void)removeAnnotationFromMapWithTag:(NSNumber *)tag
+{
+    for (int i = 0; i < self.mapView.annotations.count; i++) {
+        
+        MyAnnotation *a = [self.mapView.annotations objectAtIndex:i];
+        if(a.tag == tag)
+            [self.mapView removeAnnotation:a];
+    }
+}
+
+- (void)drawLineFromPoint:(CLLocation*)startPoint toPoint:(CLLocation*)endPoint withTitle:(NSString*)title
+{
+    MKMapPoint start = MKMapPointForCoordinate(startPoint.coordinate);
+    MKMapPoint end = MKMapPointForCoordinate(endPoint.coordinate);
+    
+    
+    MKMapPoint *points = malloc(sizeof(MKMapPoint) * 2);
+    points[0] = start;
+    points[1] = end;
+    
+    MKPolyline *line = [MKPolyline polylineWithPoints:points count:2];
+    free(points);
+    
+    [self.mapView addOverlay:line];
 }
 
 - (void)updateMapRegion
@@ -233,7 +303,7 @@
         
         int i = 0;
         for (MKAnnotationView *annotation in self.mapView.annotations) {
-            CLLocationCoordinate2D aCoord = ([annotation isKindOfClass:[MyAnnotation class]]) ? [(MyAnnotation *)annotation coordinate] : locMgr.location.coordinate;
+            CLLocationCoordinate2D aCoord = ([(MyAnnotation*)annotation tag] == LOCATION_PIN_TAG) ? [(MyAnnotation *)annotation coordinate] : lastUserLocation.coordinate;
             
             MKMapPoint mp = MKMapPointForCoordinate(CLLocationCoordinate2DMake(aCoord.latitude, aCoord.longitude));
             
@@ -265,24 +335,33 @@
 
 - (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(id<MKAnnotation>)annotation
 {
-    MKAnnotationView *pinView = nil;
+    BOOL userPin = ([(MyAnnotation*)annotation tag] == USER_PIN_TAG);
     
-    if([annotation isKindOfClass:[MyAnnotation class]]){
-        static NSString *defaultPinID = @"pin";
-        
-        pinView = (MKAnnotationView *)[mapView dequeueReusableAnnotationViewWithIdentifier:defaultPinID];
-        if (pinView == nil)
-            pinView = [[MKAnnotationView alloc]
-                       initWithAnnotation:annotation reuseIdentifier:defaultPinID];
-        
-        MyAnnotation *a = (MyAnnotation *)annotation;
-        pinView.annotation = a;
-        pinView.image = [UIImage imageNamed:@"pinezka_ciekawemiejsce.png"];
-        
-        [pinView setCanShowCallout:YES];
-    }
+    NSString *pinID = (userPin) ? @"userPin" : @"locationPin";
+    
+    MKAnnotationView *pinView = (MKAnnotationView *)[mapView dequeueReusableAnnotationViewWithIdentifier:pinID];
+    if (pinView == nil)
+        pinView = [[MKAnnotationView alloc]
+                   initWithAnnotation:annotation reuseIdentifier:pinID];
+    
+    MyAnnotation *a = (MyAnnotation *)annotation;
+    pinView.annotation = a;
+    pinView.canShowCallout = YES;
+    pinView.image = (userPin) ? [UIImage imageNamed:@"pinezka_uzytkownik.png"] : [UIImage imageNamed:@"pinezka_ciekawemiejsce.png"];
+    
+    
     
     return pinView;
+}
+
+- (MKOverlayView *)mapView:(MKMapView *)mapView viewForOverlay:(id )overlay
+{
+    MKPolylineView *view = [[MKPolylineView alloc] initWithPolyline:overlay];
+    view.strokeColor = [UIColor colorWithRed:0.0 green:127.0/255.0 blue:255.0/255.0 alpha:1];
+    view.lineCap = kCGLineCapRound;
+    view.lineWidth = 6;
+    
+    return view;
 }
 
 - (void)mapView:(MKMapView *)mapView didAddAnnotationViews:(NSArray *)annotationViews
@@ -304,32 +383,34 @@
         // get img url
         NSURL *imgURL = a.url;
         
-        // init & send request
-        NSURLRequest *request = [NSURLRequest requestWithURL:imgURL];
-        
-        __block MKAnnotationView *aView = view;
-        [NSURLConnection sendAsynchronousRequest:request
-                                           queue:[NSOperationQueue mainQueue]
-                               completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+        if(imgURL){
+            // init & send request
+            NSURLRequest *request = [NSURLRequest requestWithURL:imgURL];
             
-            if(!connectionError && data.length > 0){
-                // get img from data
-                UIImage *img = [UIImage imageWithData:data];
+            __block MKAnnotationView *aView = view;
+            [NSURLConnection sendAsynchronousRequest:request
+                                               queue:[NSOperationQueue mainQueue]
+                                   completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
                 
-                if(img){
-                    // init img view
-                    UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 32, 32)];
-                    imageView.image = img;
+                if(!connectionError && data.length > 0){
+                    // get img from data
+                    UIImage *img = [UIImage imageWithData:data];
                     
-                    // set img view as left accessory view
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        aView.leftCalloutAccessoryView = imageView;
-                    });
+                    if(img){
+                        // init img view
+                        UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 32, 32)];
+                        imageView.image = img;
+                        
+                        // set img view as left accessory view
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            aView.leftCalloutAccessoryView = imageView;
+                        });
+                    }
                 }
-            }
-            else
-                NSLog(@"Problem with internet connection: %@", connectionError.localizedDescription);
-        }];
+                else
+                    NSLog(@"%@: %@", NSLocalizedString(@"INTERNET_CONNECTION_PROBLEM_LOG", nil), connectionError.localizedDescription);
+            }];
+        }
     }
 }
 

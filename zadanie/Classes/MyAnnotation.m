@@ -15,12 +15,13 @@
 
 @implementation MyAnnotation
 
-- (id)initWithName:(NSString*)name coordinate:(CLLocationCoordinate2D)coordinate imgURL:(NSURL *)url {
+- (id)initWithName:(NSString*)name coordinate:(CLLocationCoordinate2D)coordinate imgURL:(NSURL *)url andTag:(NSNumber*)tag {
     
     if ((self = [super init])) {
         _name = name;
         _theCoordinate = coordinate;
         _url = url;
+        _tag = tag;
     }
     
     return self;
@@ -41,11 +42,6 @@
 - (CLLocationCoordinate2D)coordinate
 {
     return _theCoordinate;
-}
-
-- (NSURL *)imageURL
-{
-    return _url;
 }
 
 @end

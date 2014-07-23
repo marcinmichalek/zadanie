@@ -12,6 +12,10 @@
 @interface MapViewController : UIViewController <MKMapViewDelegate, CLLocationManagerDelegate>
 {
     CLLocationManager *locMgr;
+    
+    BOOL gpsFix;
+    
+    CLLocation *lastUserLocation;
 }
 
 @property (weak, nonatomic) IBOutlet MKMapView *mapView;
