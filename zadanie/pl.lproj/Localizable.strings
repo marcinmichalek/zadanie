@@ -1,0 +1,21 @@
+/* 
+  Localizable.strings
+  zadanie
+
+  Created by Maciej Rzeznik on 23.07.2014.
+  Copyright (c) 2014 mm. All rights reserved.
+*/
+
+"LOADING" = "wczytywanie...";
+"OFFLINE" = "offline :(";
+"GPS_PROBLEM" = "problem z GPS";
+"DISTANCE_BETWEEN_POINTS" = "odległość do punktu";
+"DISTANCE" = "dystans";
+"USER_LOCATION" = "aktualna pozycja";
+
+"LOCATION_SERVICES_AUTH_ALERT" = "Musisz włączyć usługi lokalizacji dla telefonu, a w szczególności dla aplikacji \"zadanie\" (Ustawienia > Prywatność > Usługi lokalizacji)";
+
+
+"INTERNET_CONNECTION_PROBLEM_LOG" = "Problem z połączeniem internetowym";
+"JSON_DECODE_PROBLEM_LOG" = "Problem z dekodowaniem jsona";
+

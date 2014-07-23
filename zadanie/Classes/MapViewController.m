@@ -98,6 +98,8 @@
                 // remove old pin
                 [self removeAnnotationFromMapWithTag:LOCATION_PIN_TAG];
                 
+                [self.mapView removeOverlays:self.mapView.overlays];
+                
                 // put pin
                 [self putPinOnMap:d withTag:LOCATION_PIN_TAG];
             }
@@ -202,7 +204,10 @@
             annotationOnMap = a;
     }
     
-    if(!annotationOnMap || !userLocation){
+    if(!annotationOnMap)
+        return;
+    
+    if(!userLocation){
         self.title = NSLocalizedString(@"GPS_PROBLEM", nil);
         return;
     }
@@ -253,7 +258,6 @@
     
     // draw line between points
     CLLocation *pinLocation = nil;
-    NSLog(@"annotations count = %i", self.mapView.annotations.count);
     if(self.mapView.annotations.count == 2){
         
         for (MyAnnotation *a in self.mapView.annotations) {

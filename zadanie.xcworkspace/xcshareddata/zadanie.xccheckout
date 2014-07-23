@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>B3F4801A-E999-490C-8F07-B92BC57AB636</string>
+	<key>IDESourceControlProjectName</key>
+	<string>zadanie</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>718143B9-B40B-4DE6-99C0-479A4E22808B</key>
+		<string>https://github.com/marcinmichalek/zadanie.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>zadanie.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>718143B9-B40B-4DE6-99C0-479A4E22808B</key>
+		<string>..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/marcinmichalek/zadanie.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>718143B9-B40B-4DE6-99C0-479A4E22808B</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>718143B9-B40B-4DE6-99C0-479A4E22808B</string>
+			<key>IDESourceControlWCCName</key>
+			<string>marcinmichalek</string>
+		</dict>
+	</array>
+</dict>
+</plist>
