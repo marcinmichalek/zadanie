@@ -102,8 +102,6 @@
             // remove old pin
             [self removeAnnotationFromMapWithTag:LOCATION_PIN_TAG];
             
-            [self.mapView removeOverlays:self.mapView.overlays];
-            
             // put pin
             [self putPinOnMap:d withTag:LOCATION_PIN_TAG];
         }
@@ -271,8 +269,13 @@
             }
         }
     
-        if(pinLocation)
+        if(pinLocation){
+            // remove old overlay
+            [self.mapView removeOverlays:self.mapView.overlays];
+            
+            // add new one
             [self drawLineFromPoint:lastUserLocation toPoint:pinLocation withTitle:NSLocalizedString(@"DISTANCE", nil)];
+        }
     }
 }
 
