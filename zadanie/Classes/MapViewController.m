@@ -375,6 +375,9 @@
 - (void)mapView:(MKMapView *)mapView didAddAnnotationViews:(NSArray *)annotationViews
 {
     for (MKAnnotationView *annView in annotationViews){
+        if ([(MyAnnotation*)annView.annotation tag] == USER_PIN_TAG)
+            continue;
+        
         CGRect endFrame = annView.frame;
         
         annView.frame = CGRectOffset(endFrame, 0, -500);
