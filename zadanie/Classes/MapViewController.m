@@ -36,9 +36,6 @@
         [locMgr setDelegate:self];
         [locMgr startUpdatingLocation];
     }
-//    else{
-//        [self checkLocationServices];
-//    }
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -211,6 +208,9 @@
     
     if(!userLocation){
         self.title = NSLocalizedString(@"GPS_PROBLEM", nil);
+        
+        [self checkLocationServices];
+        
         return;
     }
     
