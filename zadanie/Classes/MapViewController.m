@@ -29,12 +29,6 @@
     
     // try load pin
     [self loadJSONData];
-    
-    // observe device rotation
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(orientationChanged:)
-                                                 name:UIDeviceOrientationDidChangeNotification
-                                               object:nil];
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -42,15 +36,9 @@
     if(locMgr) // stop loc mgr
         [locMgr stopUpdatingLocation];
     
-    // remove observer
-    [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                    name:UIDeviceOrientationDidChangeNotification
-                                                  object:nil];
-    
     [super viewWillDisappear:animated];
 }
-
-- (void)orientationChanged:(NSNotification *)notification
+-(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
 {
     if(locMgr)
         [self performSelector:@selector(updateMapRegion) withObject:nil afterDelay:1];
